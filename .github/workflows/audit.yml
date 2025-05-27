@@ -8,6 +8,8 @@ on:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    env:
+      GOBUILDFLAGS: -buildvcs=false
     container: ioluas/fyne-builder:latest
     strategy:
       matrix:
@@ -42,7 +44,7 @@ jobs:
 #      run: sudo apt-get install -y --no-install-recommends gcc libgl1-mesa-dev xorg-dev libxkbcommon-dev
 
     - name: Build
-      run: go build -buildvcs=false -v ./...
+      run: go build -v ./...
 
     - name: Run go vet
       run: go vet ./...
