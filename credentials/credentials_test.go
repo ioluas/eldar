@@ -222,11 +222,6 @@ func TestClearCredentials(t *testing.T) {
 	}
 }
 
-// mockGetStorageDir is a mock implementation of GetStorageDir for testing
-func mockGetStorageDir() (string, error) {
-	return "/nonexistent/path", nil
-}
-
 // TestGetStorageDir tests the GetStorageDir function
 func TestGetStorageDir(t *testing.T) {
 	// Test desktop platform
