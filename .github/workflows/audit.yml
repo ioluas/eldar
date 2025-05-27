@@ -7,7 +7,7 @@ on:
 
 jobs:
   audit:
-    runs-on: ubuntu-latest
+    runs-on: ioluas/fyne-builder:latest
     strategy:
       matrix:
         go-version: [ 'stable', 'oldstable' ]
