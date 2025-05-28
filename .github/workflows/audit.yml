@@ -56,6 +56,8 @@ jobs:
 
     - name: staticcheck
       run: staticcheck ./...
+      env:
+        GOFLAGS: -buildvcs=false
 
     - name: golint
       uses: golangci/golangci-lint-action@v8
