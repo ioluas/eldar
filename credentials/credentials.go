@@ -82,8 +82,8 @@ func AddTestCredentialsWithDir(storageDir string) error {
 	if err != nil {
 		return fmt.Errorf("directory is not writable: %w", err)
 	}
-	f.Close()
-	os.Remove(testFile)
+	_ = f.Close()
+	_ = os.Remove(testFile)
 	dbPath := filepath.Join(dbDir, "credentials.db")
 	db, err := bbolt.Open(dbPath, 0600, nil)
 	if err != nil {
