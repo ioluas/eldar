@@ -42,6 +42,9 @@ func getTestCredentials() (*Credentials, error) {
 
 	// Check if the storage directory exists
 	if _, err = os.Stat(storageDir); err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("storage directory does not exist: %w", err)
+		}
 		return nil, fmt.Errorf("storage directory is not accessible: %w", err)
 	}
 
@@ -111,6 +114,9 @@ func clearTestCredentials() error {
 
 	// Check if the storage directory exists
 	if _, err = os.Stat(storageDir); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("storage directory does not exist: %w", err)
+		}
 		return fmt.Errorf("storage directory is not accessible: %w", err)
 	}
 
