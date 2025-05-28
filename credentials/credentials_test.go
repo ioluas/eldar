@@ -255,6 +255,7 @@ func TestGetCredentialsErrorCases(t *testing.T) {
 	_, err := getTestCredentials()
 	if err == nil {
 		t.Error("Expected error with invalid storage directory")
+		return
 	}
 	if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, os.ErrPermission) &&
 		!strings.Contains(err.Error(), "no such file or directory") &&

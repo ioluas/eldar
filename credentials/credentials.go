@@ -143,6 +143,9 @@ func GetCredentials() (*Credentials, error) {
 	var creds Credentials
 	err = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("credentials"))
+		if b == nil {
+			return fmt.Errorf("credentials bucket does not exist")
+		}
 
 		username := b.Get([]byte("username"))
 		if username != nil {
