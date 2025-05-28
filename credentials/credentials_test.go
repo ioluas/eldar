@@ -40,6 +40,11 @@ func getTestCredentials() (*Credentials, error) {
 		return nil, fmt.Errorf("failed to get test storage directory: %w", err)
 	}
 
+	// Check if the storage directory exists
+	if _, err = os.Stat(storageDir); err != nil {
+		return nil, fmt.Errorf("storage directory is not accessible: %w", err)
+	}
+
 	// Create the directory for our database if it doesn't exist
 	dbDir := filepath.Join(storageDir, ".eldar")
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
@@ -104,7 +109,21 @@ func clearTestCredentials() error {
 		return fmt.Errorf("failed to get test storage directory: %w", err)
 	}
 
-	dbPath := filepath.Join(storageDir, ".eldar", "credentials.db")
+	// Check if the storage directory exists
+	if _, err = os.Stat(storageDir); err != nil {
+		return fmt.Errorf("storage directory is not accessible: %w", err)
+	}
+
+	// If the database directory doesn't exist, there's nothing to clear
+	dbDir := filepath.Join(storageDir, ".eldar")
+	if _, err = os.Stat(dbDir); os.IsNotExist(err) {
+		fmt.Println("Database directory does not exist. Nothing to clear.")
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("database directory is not accessible: %w", err)
+	}
+
+	dbPath := filepath.Join(dbDir, "credentials.db")
 	if _, err = os.Stat(dbPath); os.IsNotExist(err) {
 		fmt.Println("Database file does not exist. Nothing to clear.")
 		return nil
