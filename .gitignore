@@ -4,8 +4,8 @@
 .cursor/
 
 # Binaries
-.eldar.apk
-.eldar.app
-.eldar.deb
-.eldar.tar.xz
-.eldar.tar.bz2
+eldar.apk
+eldar.app
+eldar.deb
+eldar.tar.xz
+eldar.tar.bz2

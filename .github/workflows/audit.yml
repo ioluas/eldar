@@ -1,0 +1,75 @@
+name: Audit
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    container: ioluas/fyne-builder:latest
+    strategy:
+      matrix:
+        go-version: [ 'stable', 'oldstable' ]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache: true
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: staticcheck
+      run: staticcheck ./...
+      env:
+        GOFLAGS: -buildvcs=false
+
+    - name: golint
+      uses: golangci/golangci-lint-action@v8
+      env:
+        GOFLAGS: -buildvcs=false
+      with: 
+        version: v2.1
+        skip-cache: true
+        skip-save-cache: true
+
+    - name: Run tests with coverage
+      env:
+        GOFLAGS: -buildvcs=false
+      run: go test -race -coverprofile=coverage.out -vet=off ./...
+
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.out
+
+    - name: Build
+      run: go build -buildvcs=false -v ./...
+
+    - name: Security audit (govulncheck)
+      run: govulncheck ./...
+      env:
+        GOFLAGS: -buildvcs=false

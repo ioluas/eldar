@@ -66,10 +66,27 @@ func AddTestCredentials() error {
 // AddTestCredentialsWithDir adds test credentials to the database for testing purposes
 // with the specified storage directory
 func AddTestCredentialsWithDir(storageDir string) error {
+	// Check if the storage directory exists
+	if _, err := os.Stat(storageDir); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("storage directory does not exist: %w", err)
+		}
+		return fmt.Errorf("storage directory is not accessible: %w", err)
+	}
+
 	dbDir := filepath.Join(storageDir, ".eldar")
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		return fmt.Errorf("failed to create database directory: %w", err)
 	}
+
+	// Check if we have write permissions to the directory
+	testFile := filepath.Join(dbDir, ".test")
+	f, err := os.Create(testFile)
+	if err != nil {
+		return fmt.Errorf("directory is not writable: %w", err)
+	}
+	_ = f.Close()
+	_ = os.Remove(testFile)
 	dbPath := filepath.Join(dbDir, "credentials.db")
 	db, err := bbolt.Open(dbPath, 0600, nil)
 	if err != nil {
@@ -143,6 +160,9 @@ func GetCredentials() (*Credentials, error) {
 	var creds Credentials
 	err = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("credentials"))
+		if b == nil {
+			return fmt.Errorf("credentials bucket does not exist")
+		}
 
 		username := b.Get([]byte("username"))
 		if username != nil {
