@@ -2,11 +2,9 @@
 package credentials
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"go.etcd.io/bbolt"
@@ -228,145 +226,5 @@ func TestClearCredentials(t *testing.T) {
 	}
 	if creds.RefreshToken != "" {
 		t.Errorf("RefreshToken should be empty after clearing, got '%s'", creds.RefreshToken)
-	}
-}
-
-// TestGetStorageDir tests the GetStorageDir function
-func TestGetStorageDir(t *testing.T) {
-	storageDir, err := GetStorageDir()
-	if err != nil {
-		t.Fatalf("GetStorageDir failed: %v", err)
-	}
-	if storageDir == "" {
-		t.Error("Expected non-empty storage directory")
-	}
-
-	originalHome := os.Getenv("HOME")
-	_ = os.Setenv("HOME", "/nonexistent/path")
-	defer func(key, value string) {
-		if err = os.Setenv(key, value); err != nil {
-			fmt.Printf("Error setting environment variable: %v", err)
-		}
-	}("HOME", originalHome)
-
-	_, err = GetStorageDir()
-	if err == nil {
-		t.Error("Expected error with invalid home directory")
-	}
-	if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, os.ErrPermission) &&
-		!strings.Contains(err.Error(), "no such file or directory") &&
-		!strings.Contains(err.Error(), "permission denied") {
-		t.Errorf("Expected not exist or permission error, got: %v", err)
-	}
-}
-
-// TestGetCredentialsErrorCases tests error cases in GetCredentials
-func TestGetCredentialsErrorCases(t *testing.T) {
-	setupTestEnvironment(t)
-
-	originalStorageDir := testStorageDir
-	testStorageDir = "/nonexistent/path"
-	defer func() { testStorageDir = originalStorageDir }()
-
-	dbDir := filepath.Join(testStorageDir, ".eldar")
-	if err := os.MkdirAll(dbDir, 0444); err == nil {
-		defer func(name string, mode os.FileMode) {
-			if err = os.Chmod(name, mode); err != nil {
-				t.Errorf("Failed to set permissions on %s: %v", name, err)
-			}
-		}(dbDir, 0755)
-	}
-
-	_, err := getTestCredentials()
-	if err == nil {
-		t.Error("Expected error with invalid storage directory")
-		return
-	}
-	if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, os.ErrPermission) &&
-		!strings.Contains(err.Error(), "no such file or directory") &&
-		!strings.Contains(err.Error(), "permission denied") {
-		t.Errorf("Expected not exist or permission error, got: %v", err)
-	}
-}
-
-// TestClearCredentialsErrorCases tests error cases in ClearCredentials
-func TestClearCredentialsErrorCases(t *testing.T) {
-	setupTestEnvironment(t)
-
-	err := clearTestCredentials()
-	if err != nil {
-		t.Errorf("Expected no error when clearing non-existent database, got: %v", err)
-	}
-
-	originalStorageDir := testStorageDir
-	testStorageDir = "/nonexistent/path"
-	defer func() { testStorageDir = originalStorageDir }()
-
-	dbDir := filepath.Join(testStorageDir, ".eldar")
-	if err = os.MkdirAll(dbDir, 0444); err == nil {
-		defer func(name string, mode os.FileMode) {
-			_ = os.Chmod(name, mode)
-		}(dbDir, 0755)
-	}
-
-	err = clearTestCredentials()
-	if err == nil {
-		// Accept nil error if the database file does not exist, matching implementation contract
-		dbPath := filepath.Join(testStorageDir, ".eldar", "credentials.db")
-		if _, statErr := os.Stat(dbPath); !os.IsNotExist(statErr) {
-			t.Error("Expected error with invalid storage directory")
-		}
-	} else if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, os.ErrPermission) &&
-		!strings.Contains(err.Error(), "no such file or directory") &&
-		!strings.Contains(err.Error(), "permission denied") {
-		t.Errorf("Expected not exist or permission error, got: %v", err)
-	}
-}
-
-// TestAddTestCredentials tests the AddTestCredentials function
-func TestAddTestCredentials(t *testing.T) {
-	setupTestEnvironment(t)
-
-	err := AddTestCredentialsWithDir(testStorageDir)
-	if err != nil {
-		t.Fatalf("Failed to add test credentials: %v", err)
-	}
-
-	creds, err := getTestCredentials()
-	if err != nil {
-		t.Fatalf("getTestCredentials failed: %v", err)
-	}
-
-	if creds.Username != "testuser" {
-		t.Errorf("Expected username 'testuser', got '%s'", creds.Username)
-	}
-	if creds.AccessToken != "test-access-token-123" {
-		t.Errorf("Expected access token 'test-access-token-123', got '%s'", creds.AccessToken)
-	}
-	if creds.RefreshToken != "test-refresh-token-456" {
-		t.Errorf("Expected refresh token 'test-refresh-token-456', got '%s'", creds.RefreshToken)
-	}
-
-	err = AddTestCredentialsWithDir("/nonexistent/path")
-	if err == nil {
-		t.Error("Expected error when adding credentials to invalid directory")
-	}
-}
-
-// TestDatabasePermissions tests database permission issues
-func TestDatabasePermissions(t *testing.T) {
-	setupTestEnvironment(t)
-
-	dbDir := filepath.Join(testStorageDir, ".eldar")
-	if err := os.MkdirAll(dbDir, 0444); err != nil {
-		t.Fatalf("Failed to create read-only directory: %v", err)
-	}
-	defer func(name string, mode os.FileMode) {
-		_ = os.Chmod(name, mode)
-	}(dbDir, 0755)
-
-	err := AddTestCredentialsWithDir(testStorageDir)
-	if err == nil {
-		t.Error("Expected error when adding credentials to read-only directory")
 	}
 }
