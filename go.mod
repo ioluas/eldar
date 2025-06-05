@@ -4,7 +4,11 @@ go 1.23.0
 
 toolchain go1.24.3
 
-require fyne.io/fyne/v2 v2.6.1
+require (
+	fyne.io/fyne/v2 v2.6.1
+	github.com/stretchr/testify v1.10.0
+	go.etcd.io/bbolt v1.4.0
+)
 
 require (
 	fyne.io/systray v1.11.0 // indirect
@@ -32,9 +36,7 @@ require (
 	github.com/rymdport/portal v0.4.1 // indirect
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/yuin/goldmark v1.7.12 // indirect
-	go.etcd.io/bbolt v1.4.0 // indirect
 	golang.org/x/image v0.27.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect

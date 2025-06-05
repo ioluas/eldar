@@ -25,6 +25,11 @@ func TestMakeLoginForm(t *testing.T) {
 	emailEntry := form.Items[0].Widget.(*widget.Entry)
 	assert.Equal(t, "Email", form.Items[0].Text)
 	assert.Equal(t, "Enter your email address", emailEntry.PlaceHolder)
+	test.Type(emailEntry, "not-an-email")
+	assert.Error(t, emailEntry.Validator("not-an-email"))
+	emailEntry.SetText("")
+	test.Type(emailEntry, "eldar@ioluas.dev")
+	assert.Nil(t, emailEntry.Validator("eldar@ioluas.dev"))
 
 	// Password
 	passwordEntry := form.Items[1].Widget.(*widget.Entry)

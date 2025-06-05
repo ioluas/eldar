@@ -5,6 +5,7 @@ package ui
 import (
 	"errors"
 	"log"
+	"net/mail"
 	"regexp"
 
 	"fyne.io/fyne/v2/widget"
@@ -35,6 +36,19 @@ func MakeLoginForm(ap *AppPage, updateWindow func()) *widget.Form {
 	form := widget.NewForm()
 	emailInput := widget.NewEntry()
 	emailInput.SetPlaceHolder("Enter your email address")
+	emailInput.Validator = func(s string) error {
+		_, err := mail.ParseAddress(s)
+		return err
+	}
+	emailInput.OnChanged = func(s string) {
+		if err := emailInput.Validate(); err != nil {
+			emailInput.SetValidationError(err)
+			form.Disable()
+			return
+		}
+		emailInput.SetValidationError(nil)
+		form.Enable()
+	}
 	form.AppendItem(widget.NewFormItem("Email", emailInput))
 	passwordInput := widget.NewPasswordEntry()
 	passwordInput.SetPlaceHolder("Enter your password")
