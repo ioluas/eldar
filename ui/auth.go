@@ -13,26 +13,18 @@ import (
 
 // Regular expressions used for password validation
 var (
-	// upperRe matches any uppercase letter
-	upperRe = regexp.MustCompile(`[A-Z]`)
-	// lowerRe matches any lowercase letter
-	lowerRe = regexp.MustCompile(`[a-z]`)
-	// digitRe matches any digit
-	digitRe = regexp.MustCompile(`[0-9]`)
-	// specialRe matches any special character
+	upperRe   = regexp.MustCompile(`[A-Z]`)
+	lowerRe   = regexp.MustCompile(`[a-z]`)
+	digitRe   = regexp.MustCompile(`[0-9]`)
 	specialRe = regexp.MustCompile(`[!"£$%^&*()\-_=+\][{}'@#~/?.>,<|]`)
 )
 
 // MakeLoginForm creates and returns a login form widget.
 // It includes fields for email and password, along with a button to navigate to the registration page.
 //
-// Parameters:
-//   - ap: A pointer to the current AppPage, which will be updated when navigating to the registration page
-//   - updateWindow: A function to call when the app page changes to update the window content
-//
 // Returns:
 //   - A configured widget.Form ready to be displayed
-func MakeLoginForm(ap *AppPage, updateWindow func()) *widget.Form {
+func (m *Manager) MakeLoginForm() *widget.Form {
 	form := widget.NewForm()
 	emailInput := widget.NewEntry()
 	emailInput.SetPlaceHolder("Enter your email address")
@@ -54,8 +46,8 @@ func MakeLoginForm(ap *AppPage, updateWindow func()) *widget.Form {
 	passwordInput.SetPlaceHolder("Enter your password")
 	form.AppendItem(widget.NewFormItem("Password", passwordInput))
 	registerButton := widget.NewButton("Register", func() {
-		*ap = Register
-		updateWindow()
+		m.SetAppPage(Register)
+		m.UpdateWindowContent()
 	})
 	form.AppendItem(widget.NewFormItem("Don't have an account yet?", registerButton))
 	form.SubmitText = "Login"
@@ -73,7 +65,7 @@ func MakeLoginForm(ap *AppPage, updateWindow func()) *widget.Form {
 //
 // Returns:
 //   - A configured widget.Form ready to be displayed
-func MakeRegisterForm() *widget.Form {
+func (m *Manager) MakeRegisterForm() *widget.Form {
 	form := widget.NewForm()
 	emailInput := widget.NewEntry()
 	emailInput.SetPlaceHolder("Enter your email address")
