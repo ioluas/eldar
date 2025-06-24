@@ -3,63 +3,35 @@ package main
 import (
 	"log"
 
-	"eldar/credentials"
+	"eldar/api"
+	"eldar/storage"
 	"eldar/ui"
 	"fyne.io/fyne/v2"
+
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 )
 
-const (
-	Register ui.AppPage = iota
-	Login
-	Group
-	Boards
-	Users
-	Unknown
-)
-
-var appPage ui.AppPage
-var w fyne.Window
-
-// updateWindowContent updates the content of the window based on the current credentials
-func updateWindowContent() {
-	if appPage == Login {
-		noCredsLabel := widget.NewLabel("Login")
-		noCredsLabel.Alignment = fyne.TextAlignCenter
-		w.SetContent(container.NewVBox(noCredsLabel, ui.MakeLoginForm(&appPage, updateWindowContent)))
-		return
-	}
-
-	if appPage == Register {
-		noCredsLabel := widget.NewLabel("Register")
-		noCredsLabel.Alignment = fyne.TextAlignCenter
-		w.SetContent(container.NewVBox(noCredsLabel, ui.MakeRegisterForm()))
-		return
-	}
-
-	creds, err := credentials.GetCredentials()
-	if err != nil {
-		log.Printf("Error getting credentials: %v", err)
-		creds = &credentials.Credentials{}
-	}
-
-	// No creds exist, we need to ask user to login
-	if creds.Username == "" && creds.AccessToken == "" && creds.RefreshToken == "" {
-		appPage = Login
-		updateWindowContent()
-		return
-	}
-
-	// Credentials are not empty, display todo for now
-	w.SetContent(container.NewVBox(widget.NewLabel("TODO")))
-}
+var db *storage.Database
 
 func main() {
-	appPage = Unknown
+	tmp, err := storage.InitDatabase()
+	if err != nil {
+		log.Fatalf("Error initializing database: %v", err)
+	}
+	db = tmp
+	if err = db.LoadConfig(); err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
+	if err = db.LoadCredentials(); err != nil {
+		log.Fatalf("Error loading credentials: %v", err)
+	}
+
+	client := api.NewClient(db.Config.Endpoint, db.Config.AnonKey)
+
 	a := app.NewWithID("dev.ioluas.eldar")
-	w = a.NewWindow("Eldar")
-	updateWindowContent()
+	w := a.NewWindow("Eldar")
+	w.Resize(fyne.NewSize(1024, 768))
+	uiManager := ui.NewUIManager(&w, db, client)
+	uiManager.UpdateWindowContent()
 	w.ShowAndRun()
 }
